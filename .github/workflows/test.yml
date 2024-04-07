@@ -1,0 +1,25 @@
+name: Test
+
+on:
+  workflow_run:
+    workflows: ["Train"]
+    types:
+      - completed
+
+jobs:
+  pull-and-run:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull Docker image
+        run: docker pull anooppv123/cicd_assignment3:latest
+
+      - name: Run Docker image and check score
+        run: |
+          SCORE=$(docker run anooppv123/cicd_assignment3:latest | tail -n 1)
+          echo "Score was $SCORE"
+          if (( $(echo "$SCORE > 0.50" | bc -l) )); then
+            echo "Score is greater than 0.50, success!"
+          else
+            echo "Score is not greater than 0.50, failing the job."
+            exit 1
